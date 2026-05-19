@@ -1,0 +1,28 @@
+# 系統檔
+desktop.ini
+Thumbs.db
+.DS_Store
+*.tmp
+~$*
+
+# Node.js
+node_modules/
+package-lock.json
+
+# AI agent 本機設定
+.claude/
+.codex/
+.opencode/
+.config/opencode/
+
+# 建置輸出
+dist/
+build/
+.cache/
+
+# 敏感資料
+.env
+.env.*
+*.key
+credentials.*
+secrets.*
