@@ -49,7 +49,6 @@
 | 06 | [安裝瀏覽器控制](06-安裝瀏覽器控制.md) | — | v0.1 | Playwright MCP + open-computer-use |
 | 07 | [開工/收工/初始化技能](07-開工收工初始化技能.md) | — | v0.1 | 全域三技能：startup、shutdown、project-init |
 | 08 | [生圖技能](08-生圖.md) | — | v0.1 | draw skill：OpenAI gpt-image-2 生圖 |
-| 09 | [連接 Gemini](09-連接-Gemini.md) | — | v0.1 | Gemini 3.5 Flash / Pro 接入（OAuth + API Key 雙方案） |
 
 ---
 
