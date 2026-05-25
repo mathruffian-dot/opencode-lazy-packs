@@ -7,6 +7,31 @@
 
 ## 使用方式
 
+### 方式一：一行指令安裝（推薦）
+
+```bash
+npx skills add mathruffian-dot/opencode-lazy-packs --skill <skill名> -g -y
+```
+
+可用的 skill 名：
+
+| Skill 名 | 對應懶人包 |
+|----------|-----------|
+| `00-env-setup` | 環境建置 |
+| `01-notebooklm` | 連接 NotebookLM |
+| `02-github` | 連接 GitHub |
+| `03-obsidian` | 連接 Obsidian |
+| `04-second-brain` | 第二大腦設定 |
+| `05-firebase` | 連接 Firebase |
+| `06-browser` | 瀏覽器控制 |
+| `07-workflow-skills` | 開工/收工技能 |
+| `08-draw` | 生圖技能 |
+| `09-install-all` | 一次全部安裝 |
+
+安裝後對 OpenCode 說該技能對應的關鍵字即可啟動。
+
+### 方式二：手動下載 MD 檔
+
 1. 看影片了解原理
 2. 下載對應的懶人包（MD 檔）
 3. 開啟終端機，在專案目錄執行 `opencode`
