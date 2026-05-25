@@ -7,7 +7,22 @@
 
 ## 使用方式
 
-### 方式一：一行指令安裝（推薦）
+### 方式一：直接叫 AI 幫你裝（最簡單）
+
+把這行貼給你的 AI agent：
+
+```
+這是 OpenCode 懶人包全集 https://github.com/mathruffian-dot/opencode-lazy-packs
+請讀取 repo 內容，列出所有可用的懶人包，問我要裝哪些。
+```
+
+AI 會自動：
+1. 讀取 repo 的 `SKILL.md`（安裝入口）
+2. 列出 10 個懶人包
+3. 問你要裝哪些（可以選「全部」或特定編號）
+4. 自動安裝你選的項目
+
+### 方式二：一行指令手動裝
 
 ```bash
 npx skills add mathruffian-dot/opencode-lazy-packs --skill <skill名> -g -y
