@@ -533,12 +533,50 @@ GitHub 網頁 → 你的 repo → **Settings** → **Secrets and variables** →
 
 裝了之後可以做的事：對 OpenCode 說「**幫我看一下文字雲那張表現在有幾筆、最多人寫的詞是什麼**」，它直接讀資料庫回答你，不用開 Dashboard。
 
+### 🔴 7-0 先跑這一行——這一步會省下你一整個下午
+
+**在寫任何設定之前，先確認兩件事：token 有沒有效、`project_ref` 該填哪一個。**
+
+先到 <https://supabase.com/dashboard/account/tokens> → **Generate new token**（取名 `opencode`）→ 複製 `sbp_` 開頭那串，設成環境變數：
+
+```powershell
+[Environment]::SetEnvironmentVariable('SUPABASE_ACCESS_TOKEN','你的sbp_token','User')
+```
+
+**然後開一個新的 PowerShell 視窗**（舊視窗看不到剛設的變數），跑：
+
+```powershell
+curl.exe -s -H "Authorization: Bearer $env:SUPABASE_ACCESS_TOKEN" https://api.supabase.com/v1/projects
+```
+
+會列出你所有專案的 `id`（＝`project_ref`）、`name`、`status`：
+
+```
+id: jjiuptgdwdpnhnzujzcl   name: myclass             status: ACTIVE_HEALTHY
+id: xxbjykdheracbfmwpxwm   name: my-teaching-tools   status: INACTIVE
+```
+
+**這一行同時回答四件事**：
+
+| 你看到 | 意思 |
+|---|---|
+| 列不出來 / 401 | token 錯了或沒設好 |
+| 列得出來 | ✅ token 有效 |
+| 清單裡的 `id` | **`project_ref` 就填這個，不要自己抄網址** |
+| `status: INACTIVE` | 那個專案**被暫停了**（閒置滿一週），去 Dashboard 按 Restore |
+
+> 🔴 **給 AI agent：這一步不准跳過。**
+> `project_ref` 填錯的症狀**極度誤導**——MCP 會顯示 `✓ connected`、20 個工具全部列得出來，
+> 但**每一個呼叫都回 `You do not have permission to perform this action`，連 `select` 都被拒絕**。
+> 這看起來完全像憑證權限不足，**於是 agent 會開始換各種金鑰亂試**——那是白費力氣，錯的是 ID 不是憑證。
+> **先跑上面那行，用它印出來的 id，就不會走進這個迷宮。**
+
 ### 7-1 設定（官方文件明列支援 OpenCode）
 
-Supabase 提供**官方托管的遠端 MCP server**，走 **OAuth 動態註冊**——**不再需要 Personal Access Token（PAT）**。
-舊教材要你去產生一組「永不過期的 PAT」再貼給 agent 的做法，**已經不需要，也不建議**。
+用 **Personal Access Token（PAT）** 認證。官方文件明講：**在無法完成瀏覽器 OAuth 流程的環境，改用 PAT**——研習現場正是這種環境。
 
-編輯 `~/.config/opencode/opencode.json`（Windows：`WIN+R` 貼 `%USERPROFILE%\.config\opencode`）：
+編輯 `~/.config/opencode/opencode.json`（Windows：`WIN+R` 貼 `%USERPROFILE%\.config\opencode`）。
+**如果檔案裡已經有 `mcp` 區塊，把 `supabase` 這一塊加進去，不要整個蓋掉：**
 
 ```json
 {
@@ -546,33 +584,50 @@ Supabase 提供**官方托管的遠端 MCP server**，走 **OAuth 動態註冊**
   "mcp": {
     "supabase": {
       "type": "remote",
-      "url": "https://mcp.supabase.com/mcp",
-      "enabled": true
+      "url": "https://mcp.supabase.com/mcp?project_ref=剛才印出來的id",
+      "enabled": true,
+      "timeout": 300000,
+      "headers": {
+        "Authorization": "Bearer {env:SUPABASE_ACCESS_TOKEN}"
+      }
     }
   }
 }
 ```
 
-然後在終端機執行：
+三個重點：
 
-```bash
-opencode mcp auth supabase
-```
+- **`headers` 裡帶 PAT** → **完全不用跑 `opencode mcp auth`，沒有瀏覽器往返、不會過期**
+- **`{env:...}` 引用環境變數** → token 不會明文躺在設定檔裡
+- **`timeout` 一定要設** → OpenCode 預設只等 5 秒，資料庫操作常常不夠
 
-> 🖐️ 瀏覽器會開啟 Supabase 授權頁。**確認右上角是你自己的帳號再按同意**（多帳號環境最容易在這裡選錯人）。
+改完**完全關閉 OpenCode 再開**，不重開不生效。
 
-### 7-2 官方建議的安全參數（建議加）
+> **那 OAuth 呢？** `opencode mcp auth supabase` 也能用，但它需要瀏覽器往返、**而且會過期**
+> （實測過一台機器的狀態掉成 `⚠ needs authentication` 而使用者毫無察覺）。
+> 一個人自己用沒差；**一整班同時做，PAT 穩定得多**，因為它沒有互動步驟。
 
-官方文件建議在網址後面加參數，把 agent 能碰的範圍縮到最小：
+### 7-2 關於 `read_only=true`：先搞清楚它做什麼
 
-```json
-"url": "https://mcp.supabase.com/mcp?read_only=true&project_ref=<你的專案id>"
-```
+官方建議可以加 `read_only=true` 限制 agent 只能查。**但有個常被誤會的地方：**
+
+> ⚠️ **加了 `read_only=true`，工具清單不會變少。** 實測兩邊都是 20 個工具，
+> `execute_sql`、`apply_migration` 照樣列出來——它是讓查詢改用**唯讀的 Postgres 使用者**去跑。
+>
+> 所以 agent **看得到寫入工具、也會去用，然後才失敗**。而失敗訊息長得像權限問題，
+> 又會把 agent 帶往「是不是憑證不對」的錯誤方向。
+
+**本包的建議：研習期間不要加 `read_only=true`。** 因為作品④ 需要建表與寫入。
+
+| 情境 | 建議 |
+|---|---|
+| 研習現場（全新專案、都是假資料） | **不加**，需要寫入 |
+| 回學校接**真的班務資料庫** | **加上去**，防 prompt injection（見下方紅框） |
 
 | 參數 | 作用 |
 |------|------|
-| `read_only=true` | **只讀**。agent 只能查，不能改、不能刪 |
-| `project_ref=<專案id>` | 鎖定單一專案，agent 碰不到你其他專案 |
+| `project_ref=<專案id>` | **一定要加**。鎖定單一專案，agent 碰不到你其他專案 |
+| `read_only=true` | 查詢改用唯讀使用者。**研習不加，接正式資料庫再加** |
 
 > 🔴 **官方明講：不要把 MCP 連到生產環境（正式在用的資料庫）。**
 > 原因是 **prompt injection**——資料表裡如果有一筆學生填進去的內容寫著
@@ -583,11 +638,37 @@ opencode mcp auth supabase
 
 `<你的專案id>` 去哪拿：Dashboard 網址列 `https://supabase.com/dashboard/project/<這一段>`，或 Project Settings → General → Project ID。
 
-### 7-3 驗證
+### 7-3 驗證（三關都要過，只過第一關不算數）
 
-1. **完全關閉** OpenCode 再重開
-2. 終端機執行 `opencode mcp list` → `supabase` 那一列的狀態是已授權
-3. 對 OpenCode 說：「**請列出我的 Supabase 專案**」→ 列得出來（就算只有一個）= 通了
+**第一關：連得上**
+
+```powershell
+opencode mcp list
+```
+
+看到 `✓ supabase connected`。
+
+> ⚠️ **`connected` 不代表能用。** 這是今天最容易誤判的地方——
+> `project_ref` 填錯的時候，它一樣顯示 `connected`。
+
+**第二關：讀得到**
+
+對 OpenCode 說：「**列出我這個 Supabase 專案裡的表格**」
+
+- 列得出來（就算是空的）= ✅ 過關
+- 回 `You do not have permission` = ❌ **`project_ref` 填錯了**，回 7-0 重新確認，**不要去換憑證**
+
+**第三關：寫得進去**
+
+對 OpenCode 說：
+
+```
+幫我建一張測試表 _probe，欄位 id 和 note，寫一筆進去，讀出來給我看，然後把表刪掉
+```
+
+四個動作全部成功 = ✅ **讀寫都通，可以開始做作品④**。
+
+> 實測結果供對照：正確設定下這四步全過；`project_ref` 填錯時，**連第一步的 `select` 都會被拒絕**。
 
 ---
 
@@ -649,6 +730,15 @@ opencode mcp auth supabase
 ---
 
 ## 常見坑
+
+| 症狀 | 真正的原因 / 解法 |
+|------|------------------|
+| **`✓ connected` 但每個動作都回 `You do not have permission`，連 `select` 都不行** | 🔴 **`project_ref` 填錯了，不是憑證問題。**<br>這是最誤導人的一個坑——連得上、工具全部列得出來、但一動就死。<br>**不要去換金鑰**，回 7-0 跑那行 `curl` 對一下 id |
+| 加了 `read_only=true` 之後，agent 還是去呼叫寫入工具然後失敗 | 正常。`read_only` **不會讓工具消失**（實測兩邊都 20 個），只是查詢改用唯讀使用者。研習期間不要加（見 7-2） |
+| 專案連不上、Dashboard 顯示 paused | 免費專案閒置滿一週被自動暫停。按 **Restore** 就回來，資料完整保留。7-0 那行 `curl` 會直接顯示 `status: INACTIVE` |
+| MCP 一直逾時 | `timeout` 沒設。OpenCode 預設只等 5 秒，要加 `"timeout": 300000` |
+| 設定檔改完沒反應 | 沒有**完全關閉**再重開 OpenCode |
+
 
 | 症狀 | 原因 / 解法 |
 |------|------------|
