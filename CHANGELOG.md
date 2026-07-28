@@ -41,6 +41,16 @@
   ① Windows 用 `Start-Process` 開一個不受逾時影響的獨立視窗，或 ② 請使用者自己開終端機；
   然後 agent **只輪詢 `gh auth status`**（exit 0 = 成功、1 = 尚未完成），**明確禁止重跑 login**。
   常見坑另補三條，包含「八碼怎麼打都說錯 ＝ 看到的是被重跑作廢的舊碼」。
+- **`03-notebooklm` 跟上產品改名：NotebookLM → Gemini Notebook。**
+  Google 於 **2026-07-16** 將 NotebookLM 更名為 **Gemini Notebook**（同一個產品，筆記本不用搬家）。
+  查證後確認影響範圍很小但很關鍵：**PyPI 套件名 `notebooklm-mcp-cli`、CLI 指令 `nlm`、
+  MCP 執行檔 `notebooklm-mcp` 全部沒變**，所以安裝指令照舊；
+  只有 GitHub repo 搬到 `jacob-bd/gemini-notebook-mcp-cli`（舊網址會轉址）。
+  真正的問題是**使用者畫面上看到的是新名字**，講義還在講舊名字 → 老師會找不到。
+  改動：標題與內文改用新名稱、開頭加一段改名對照表、
+  **`description` 兩個名字都列為觸發詞**（否則使用者說「連接 Gemini Notebook」時這一包不會載入）、
+  **技能 id `opencode-notebooklm` 刻意不改**，避免破壞既有引用。
+
 - **`07-github` 套用同一套「該信誰」框架。**
   與 `06-supabase` 一致：`gh` 的指令與輸出、GitHub 網頁的介面一律以 `--help`、官方文件與現場畫面為準；
   「兩道門」、裝置碼會被逾時砍掉、註冊拼圖是風險評分、credential helper 查不到不等於沒設好、

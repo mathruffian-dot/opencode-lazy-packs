@@ -1,9 +1,25 @@
 ---
 name: opencode-notebooklm
-description: 連接 NotebookLM，讓 OpenCode 讀寫 Google NotebookLM 筆記本。說「連接 NotebookLM」「裝 NotebookLM」時載入。
+description: 連接 Gemini Notebook（原 NotebookLM），讓 OpenCode 讀寫筆記本、產生簡報與音訊概覽。說「連接 Gemini Notebook」「連接 Gemini Notebook」「裝 Gemini Notebook」「Gemini 筆記本」時載入。
 ---
 
-# OpenCode 懶人包 #03：連接 NotebookLM
+# OpenCode 懶人包 #03：連接 Gemini Notebook（原 NotebookLM）
+
+> 🔴 **產品在 2026-07-16 改名了。**
+> Google 把 **Gemini Notebook** 更名為 **Gemini Notebook**，介面換成藍紫色的 Gemini 漸層 logo。
+> **同一個產品、同一批筆記本，不用搬家、不用重建。**
+>
+> 對本包的實際影響：
+>
+> | 項目 | 有沒有變 |
+> |---|---|
+> | 產品名稱與 logo | ✅ **改了**——使用者畫面上看到的是「Gemini Notebook」 |
+> | PyPI 套件名 `notebooklm-mcp-cli` | ❌ **沒變** |
+> | CLI 指令 `nlm`、MCP 執行檔 `notebooklm-mcp` | ❌ **沒變** |
+> | GitHub repo | ⚠️ 搬到 `jacob-bd/gemini-notebook-mcp-cli`（舊網址會轉址） |
+>
+> **所以底下的安裝指令全部照舊可用。** 只有跟使用者講話時要說「Gemini Notebook」，
+> 否則他打開畫面會找不到你說的那個名字。
 
 
 > 📌 **本懶人包可獨立執行**：會自動檢查並安裝所需工具。
@@ -12,7 +28,7 @@ description: 連接 NotebookLM，讓 OpenCode 讀寫 Google NotebookLM 筆記本
 
 ## 這個懶人包會幫你做什麼？
 
-讓 OpenCode 能夠操作 Google NotebookLM：
+讓 OpenCode 能夠操作 Gemini Notebook：
 - 建立 notebook、上傳資料來源
 - 產生教學簡報（Slide Deck）、資訊圖表（Infographic）
 - 產生音訊概覽、影片概覽、心智圖、測驗等
@@ -23,10 +39,10 @@ description: 連接 NotebookLM，讓 OpenCode 讀寫 Google NotebookLM 筆記本
 ## 原理說明
 
 ```
-OpenCode ←(MCP 協定)→ notebooklm-mcp（翻譯官）←(Google 登入)→ NotebookLM
+OpenCode ←(MCP 協定)→ notebooklm-mcp（翻譯官）←(Google 登入)→ Gemini Notebook
 ```
 
-因為 NotebookLM 沒有官方 API，中間需要一個「翻譯官」模擬瀏覽器操作。
+因為 Gemini Notebook 沒有官方 API，中間需要一個「翻譯官」模擬瀏覽器操作。
 
 **裝一次，會得到兩個指令**（同一個套件提供，不要以為裝錯了）：
 
@@ -47,7 +63,7 @@ OpenCode ←(MCP 協定)→ notebooklm-mcp（翻譯官）←(Google 登入)→ N
 | 套件名稱 | `notebooklm-mcp-cli` | `nlm` |
 | 安裝指令 | `uv tool install notebooklm-mcp-cli` | ~~`npm install nlm`~~ |
 
-> 🚨 **npm 上真的有一個叫 `nlm` 的套件，但它跟 NotebookLM 一點關係都沒有**（是 2021 年停更的另一個專案）。
+> 🚨 **npm 上真的有一個叫 `nlm` 的套件，但它跟 Gemini Notebook 一點關係都沒有**（是 2021 年停更的另一個專案）。
 > 打 `npm install nlm` **不會報錯**，會裝得好好的——然後你會拿著一個完全無關的工具，花一小時找不到問題出在哪。
 > **這一包只用 PyPI 的 `notebooklm-mcp-cli`。**
 
@@ -119,7 +135,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ---
 
-### 步驟二：安裝 NotebookLM 工具
+### 步驟二：安裝 Gemini Notebook 工具
 
 ```bash
 uv tool install notebooklm-mcp-cli
@@ -244,7 +260,7 @@ nlm setup list
 |------|------|
 | `command` 填 **`notebooklm-mcp`** | **不是 `nlm`**。`nlm` 是給人打的 CLI，它沒有 `--transport` 這個選項；寫成 `["nlm", "--transport", "stdio"]` 會直接啟動失敗 |
 | `command` 是**陣列** | OpenCode 的 `command` 只吃陣列，而且**沒有 `args` 欄位**（照抄 Claude Code 的寫法會壞，見 `00-env-setup` 的 MCP 通用守則） |
-| **一定要加 `timeout`** | OpenCode 的 MCP 逾時預設只有 5000 毫秒（5 秒）。NotebookLM 的操作（產簡報、產影片、查詢）動輒數十秒到數分鐘，不加必逾時。`300000` = 5 分鐘 |
+| **一定要加 `timeout`** | OpenCode 的 MCP 逾時預設只有 5000 毫秒（5 秒）。Gemini Notebook 的操作（產簡報、產影片、查詢）動輒數十秒到數分鐘，不加必逾時。`300000` = 5 分鐘 |
 
 **如果加了 `timeout` 還是逾時**，再補一個全域設定（跟 `mcp` 同一層）：
 
@@ -272,7 +288,7 @@ nlm setup list
 
 ```
 Documents/
-  └── NotebookLM/
+  └── Gemini Notebook/
       ├── slides/          ← 簡報（Slide Deck）
       ├── infographics/    ← 資訊圖表
       ├── audio/           ← 音訊概覽
@@ -307,7 +323,7 @@ opencode mcp debug notebooklm
 看到 `✓ connected` 之後，再對 OpenCode 說：
 
 ```
-請列出我所有的 NotebookLM 筆記本。
+請列出我所有的 Gemini Notebook 筆記本。
 ```
 
 能列出（即使是空的）代表整條路都通了。
@@ -319,7 +335,7 @@ opencode mcp debug notebooklm
 1. 建立一個名為「測試筆記本」的 notebook
 2. 確認建立成功
 3. 刪除這個測試筆記本
-4. ✅ 「全部完成！OpenCode 已成功連接 NotebookLM。」
+4. ✅ 「全部完成！OpenCode 已成功連接 Gemini Notebook。」
 
 ---
 
@@ -358,7 +374,7 @@ local_folders=ok               # ok | skipped
 ## 完成回報格式
 
 ```md
-## NotebookLM 連接完成
+## Gemini Notebook 連接完成
 
 | 項目 | 狀態 |
 |------|------|
@@ -380,7 +396,7 @@ local_folders=ok               # ok | skipped
 
 ## 如果安裝失敗，如何重來
 
-對 OpenCode 說：「上次 NotebookLM 懶人包執行失敗了，幫我清除設定，重新跑一次。」
+對 OpenCode 說：「上次 Gemini Notebook 懶人包執行失敗了，幫我清除設定，重新跑一次。」
 
 復原步驟：
 
@@ -415,7 +431,7 @@ local_folders=ok               # ok | skipped
 | `ModuleNotFoundError: No module named 'notebooklm_tools'` | 安裝被弄壞了（多半是手動搬過檔案）。`uv tool uninstall notebooklm-mcp-cli` 後重裝，**不要**自己去搬 `.local\bin` 裡的檔案 |
 | Windows 上指令格式錯誤 | 使用 PowerShell，不要用 CMD；不要用 `&&` 串指令，用 `;` |
 | `nlm list` 之類的指令在 Windows 顯示亂碼或 `UnicodeDecodeError` | 設定 `$env:PYTHONIOENCODING = "utf-8"` 再跑。這是 Windows 中文版 cp950 編碼的已知問題，不影響 MCP 功能 |
-| 網頁介面改叫別的名字了 | Google 有在調整 NotebookLM 的品牌與網址。工具會自動處理新舊網域，指令不用改；真的連不上再跑 `nlm doctor` 看診斷 |
+| 網頁介面改叫別的名字了 | Google 有在調整 Gemini Notebook 的品牌與網址。工具會自動處理新舊網域，指令不用改；真的連不上再跑 `nlm doctor` 看診斷 |
 
 ---
 
@@ -423,4 +439,4 @@ local_folders=ok               # ok | skipped
 
 - `00-env-setup` — uv 的安裝權威版本，以及**MCP 通用守則**（逾時、設定格式、金鑰安全）
 - `04-obsidian` — 另一條把素材收進第二大腦的路線
-- `02-file-toolkit` — 把 NotebookLM 產出的檔案再加工
+- `02-file-toolkit` — 把 Gemini Notebook 產出的檔案再加工
