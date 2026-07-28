@@ -22,6 +22,23 @@
   讓 agent 長出手腳：Python 文件處理（Word／Excel／PPT／PDF／圖片／QR／轉 Markdown）＋ 影音工具（yt-dlp／FFmpeg）＋ 語音（Edge-TTS）。裝完就能用一句人話請 agent 產獎狀、算成績、做簡報、抽影片音軌。
   （影音與語音兩段仍在擴充中，文件處理的部分已可使用。）
 
+### 修正
+
+- **`07-github` 修掉一個會在研習現場誤報的判定。**
+  原本用 `git config --global --get-regexp credential` 驗證 `gh auth setup-git` 有沒有生效。
+  問題是：Windows 用 winget 裝的 Git for Windows **內建 Git Credential Manager (GCM)，而它的設定寫在 system 層不是 global 層**。
+  於是實測會出現「查詢結果是空的、但 `git push` 完全正常」——agent 照原本的規則會判 `GH_SETUP_GIT=FAIL`，
+  一整班同時誤報，助教得一台一台去查一個不存在的問題。
+  改法：驗證改用 `git config --show-origin --get-all credential.helper`（看所有層級），
+  **gh／GCM／push 成功三者任一皆算通過**，並在成功訊號表明訂 `GH_SETUP_GIT` 不作為硬性 FAIL 關卡。
+  同時修正「九成的 push 失敗都是漏了 `gh auth setup-git`」這句——有 GCM 的機器上，`git push` 是開瀏覽器授權，不是要帳號密碼。
+- **`07-github` 補上註冊階段的拼圖驗證（Arkose FunCaptcha）。**
+  原本只寫了「到 github.com/signup 自己註冊」，也只在常見坑提到**登入**階段的壅塞。
+  實際上更難救的是**註冊**：它是風險評分不是解題，**同一個 IP 短時間多人註冊**會被判定為機器人批次開帳號，
+  於是出現「解了十題還在解」而且解對也沒用的循環。
+  新增「**一定要前一晚在家裡註冊**」的明確指示，以及現場救援順序（手機熱點 → 關 VPN → 無痕／換瀏覽器 → 不要猛按重試）。
+- **`00-env-setup` 補上 GCM 說明**：裝 Git for Windows 會一併裝 GCM，並點明它的設定在 system 層、`git config --global` 查不到。
+
 ### 改寫
 
 - **`07-github` 改成三階段教學**：①拿別人的東西（`git clone`，不用帳號）②怕弄丟（建 repo → push）③換電腦驗收（`git pull`）。每一階段對應老師的一個痛點，在他「已經痛過」之後才教，不再一次倒完。

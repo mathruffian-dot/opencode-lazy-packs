@@ -202,6 +202,12 @@ winget install --id Git.Git --exact --accept-source-agreements --accept-package-
 
 > 🔒 **沒有管理員權限時**（學校電腦常見）：先試 `winget install --id Git.Git --exact --scope user`；仍失敗就到 <https://git-scm.com/downloads> 下載安裝檔，或請資訊組協助。
 
+> 📌 **順便知道一件事：Windows 版的 Git 會一起裝「Git Credential Manager」(GCM)。**
+> 它負責記住你的 GitHub 登入，第一次 `git push` 時會開瀏覽器讓你授權一次，之後就不用再輸入任何東西。
+>
+> 這件事在 `07-github` 那一包很重要：**GCM 的設定寫在 system 層，用 `git config --global` 查不到**。
+> 查不到不代表沒有——很多人因此誤以為憑證沒設好，跑去修一個根本不存在的問題。詳見 `07-github` 的步驟 2-3。
+
 ### macOS
 
 macOS 通常已內建 Apple 版 Git，先跑 `git --version`。真的沒有：

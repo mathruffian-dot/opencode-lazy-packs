@@ -178,8 +178,28 @@ origin  https://github.com/mathruffian-dot/opencode-lazy-packs.git (push)
 
 到 <https://github.com/signup> 用瀏覽器自己註冊。
 
-> ⚠️ **AI agent 不要代填帳號密碼、不要代為註冊**，請老師自己在瀏覽器完成。
+> ⚠️ **AI agent 不要代填帳號密碼、不要代為註冊、也不要代解驗證**，請老師自己在瀏覽器完成。
 > 記下你的**帳號名稱**（後面會一直用到）。
+
+### 🔴 註冊一定要在家裡先做，不要留到研習現場
+
+GitHub 註冊會出現拼圖驗證（Arkose Labs FunCaptcha）。它**不是在考你解得對不對，是在給你的來源打分數**——分數低就一直發新題目，所以會出現「解了十題還在解」的無限循環，而且解對也沒用。
+
+**扣分最重的一項，正好就是研習現場的樣子：同一個 IP 在短時間內多人註冊。** 整間教室共用一個對外 IP，大概第三、四個人開始就會被當成機器人在批次開帳號。
+
+所以：
+
+- ✅ **前一晚在自己家裡註冊**——每個人 IP 不同，這一關天然就過了
+- ❌ 不要全班在現場一起註冊
+
+**現場真的有人非註冊不可時，照這個順序救：**
+
+1. **請他開手機熱點，用行動網路註冊**（換一個乾淨 IP，最有效）
+2. 關掉 VPN
+3. 改用無痕視窗，或換一個沒裝擴充功能的瀏覽器（廣告攔截器與隱私擴充會擋掉驗證用的網域、或清掉驗證 cookie，造成「解對了卻又跳一題」）
+4. **不要連續猛按重試**，越試分數越低，等幾分鐘再來
+
+> 講師請自備一支手機熱點當救援。這一關助教沒有別的辦法可以救。
 
 ### 2-2 登入 GitHub CLI
 
@@ -245,23 +265,36 @@ gh auth setup-git
 
 **成功時沒有任何輸出**（沒消息就是好消息）。
 
-驗證：
+驗證——**看所有層級，不要只看 `--global`**：
 
 ```powershell
-git config --global --get-regexp credential
+git config --show-origin --get-all credential.helper
 ```
 
-預期看到兩行（第一行是空值，正常）：
+**下面三種結果任一種都算通過**：
 
-```
-credential.https://github.com.helper
-credential.https://github.com.helper !'C:\Program Files\GitHub CLI\gh.exe' auth git-credential
-```
+| 你看到的 | 意思 | 判定 |
+|---------|------|------|
+| 含 `gh.exe' auth git-credential`（或 `/usr/bin/gh auth git-credential`） | `gh auth setup-git` 生效了 | ✅ 通過 |
+| `manager`，來源是 `C:/Program Files/Git/etc/gitconfig` | **Git for Windows 內建的 Git Credential Manager (GCM)** 在管，一樣能用 | ✅ 通過 |
+| 完全沒有輸出 | 沒有任何憑證管理員 | ⚠️ 這時才需要處理 |
 
-> Mac / Linux 第二行會是 `!/usr/bin/gh auth git-credential` 之類的路徑，一樣算通過。
+> 🔴 **給 AI agent 的重要提醒：不要用 `git config --global --get-regexp credential` 當判斷依據。**
+> Windows 用 winget 裝的 Git for Windows **預設就帶 GCM，而且設定寫在 system 層不是 global 層**。
+> 只查 `--global` 會得到空結果，於是誤判成「setup-git 失敗」——但使用者的 `git push` 其實好好的。
+> **這是本包最容易誤報的一項。**
 
-**沒跑這一行的後果**：`git push` 會跳出視窗要你輸入 GitHub 帳號密碼，而且密碼還會被拒絕
-（GitHub 早就不接受密碼推送了）。九成的「push 失敗」都是漏了這一步。
+**真正的判斷標準是 `git push` 會不會成功**，不是設定檔長什麼樣子。設定看不出來但 push 得上去 → 通過，不要叫使用者去修一個不存在的問題。
+
+**兩種憑證管理員的差別**（都能用，不用二選一）：
+
+| | `gh auth setup-git` | GCM（Git for Windows 內建） |
+|---|---|---|
+| 第一次 push 時 | 直接過，不問你 | **開瀏覽器**讓你授權一次，之後就記住了 |
+| token 存哪 | 作業系統憑證保管庫 | 作業系統憑證保管庫 |
+| 要另外裝嗎 | 不用（跟著 gh） | 不用（跟著 Git for Windows） |
+
+兩個都沒有的時候，`git push` 才會退回去要帳號密碼——而 GitHub 早就不接受密碼推送，所以一定失敗。**`gh auth setup-git` 的價值是「保證有」，不是「唯一解」。**
 
 ### 2-4 設定 Git 使用者資訊
 
@@ -477,9 +510,12 @@ gh repo clone 你的帳號/my-teaching-materials
 | 症狀 | 原因 / 解法 |
 |------|------------|
 | `gh auth login` 跑下去沒反應、卡住 | 這是**互動指令**，agent 在背景跑會卡死。請在自己看得見的終端機視窗手動執行 |
+| **註冊時拼圖一直跳、解十題也過不了** | 不是你解錯——那是風險評分，**同一個 IP 多人註冊**會被當成機器人批次開帳號。<br>解法：**改用手機熱點**（換 IP，最有效）／關 VPN／換無痕視窗或沒裝擴充的瀏覽器／不要連續猛按。<br>**根本解法是前一晚在家裡註冊好**（見 2-1） |
 | 8 碼驗證碼失效 | 裝置碼流程只有幾分鐘有效。**研習現場數十人同時登入時特別容易踩到**：講解一拖，碼就過期了。重跑 `gh auth login` 拿新碼即可 |
 | 研習現場一堆人同時登不進去 | 幾十台電腦同時開 `github.com/login/device`＋網路壅塞。建議：**請大家前一天先註冊好帳號**，現場**分批（一排一排）**進行，講師先示範完整一輪再放行 |
-| `git push` 跳視窗要帳號密碼 | 漏了 `gh auth setup-git`（見 2-3）。GitHub 已不接受密碼推送，輸入也會失敗 |
+| `git push` 跳視窗要帳號密碼 | 這台完全沒有憑證管理員。跑 `gh auth setup-git`（見 2-3）。GitHub 已不接受密碼推送，硬輸入也會失敗 |
+| `git push` 開了瀏覽器要你授權 | **正常的**，那是 Git for Windows 內建的 GCM 在做事。授權一次之後就記住了，不用改成 gh |
+| 明明 push 得上去，卻被判定「setup-git 沒做」 | 誤判。GCM 的設定在 **system 層**，用 `git config --global` 查不到。改用 `git config --show-origin --get-all credential.helper`（見 2-3） |
 | `git commit` 說 `Author identity unknown` | 回去做 2-4 的 `git config --global user.name` / `user.email` |
 | `gh repo create` 回 `HTTP 403` / 權限不足 | `gh auth status` 看 `Token scopes` 有沒有 `repo`；沒有就 `gh auth refresh -h github.com -s repo` |
 | `remote origin already exists` | 這個資料夾已經接過別的 repo。`git remote -v` 看是哪一個，通常是你在**別人 clone 下來的資料夾**裡執行了 `gh repo create` |
@@ -495,7 +531,7 @@ gh repo clone 你的帳號/my-teaching-materials
 
 ```powershell
 gh auth status
-git config --global --get-regexp credential
+git config --show-origin --get-all credential.helper
 git config --global user.email
 git -C <專案資料夾> remote -v
 git -C <專案資料夾> log --oneline -1
@@ -507,7 +543,7 @@ git -C <專案資料夾> log --oneline -1
 |--------|---------|
 | `GH_AUTH` | `gh auth status` 含 `Logged in to github.com` |
 | `GH_SCOPE_REPO` | `Token scopes` 字串含 `repo` |
-| `GH_SETUP_GIT` | credential helper 有一行含 `gh` 且含 `auth git-credential` |
+| `GH_SETUP_GIT` | credential helper 含 `gh ... auth git-credential` **或** 含 `manager`（GCM）。<br>兩者都沒有但 `STAGE2_PUSH` 成功 → 一樣記 `OK`（見下方註記） |
 | `GIT_IDENTITY` | `user.name` 與 `user.email` 皆非空 |
 | `STAGE1_CLONE` | 目標資料夾存在，且 `git remote -v` 有 `origin` |
 | `STAGE2_PUSH` | `gh repo view --json url` 回得出網址，且 `git log` 至少一筆 commit |
@@ -527,6 +563,11 @@ STAGE3_PULL=SKIP
 ```
 
 > 只要有任何一項是 `FAIL`，`GITHUB_PACK_STATUS` 就必須是 `FAIL`。
+>
+> ⚠️ **唯一例外：`GH_SETUP_GIT`。**
+> 憑證管理員的設定可能寫在 system 層（Git for Windows 內建的 GCM），查不到不代表壞掉。
+> **只要 `STAGE2_PUSH` 是 `OK`，就把 `GH_SETUP_GIT` 記成 `OK`**——push 得上去就是最終證據。
+> 不要因為這一項就叫使用者去修一個不存在的問題。
 
 ---
 
