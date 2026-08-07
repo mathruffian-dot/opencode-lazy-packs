@@ -185,4 +185,5 @@ MIT License。
 
 - [opencode-draw-free](https://github.com/mathruffian-dot/opencode-draw-free) — 免金鑰生圖技能（Pollinations）
 - [agent-speak-skill](https://github.com/mathruffian-dot/agent-speak-skill) — 讓 AI Agent「用語音回答你」：免費 Edge-TTS 串流語音回覆，零金鑰、無視窗（Claude Code／Codex／OpenCode／AntiGravity 通用）
+- [image-vision-sidecar](https://github.com/mathruffian-dot/image-vision-sidecar) — 讓純文字模型（DeepSeek／GLM）間接讀圖的免費 Vision Sidecar：Groq API 把 PDF／PPTX／DOCX／圖片轉成繁中 Markdown
 - [ai-agent-ep03](https://github.com/mathruffian-dot/ai-agent-ep03) — #02 內部工具包的安裝腳本與範例（預設分支 `master`）
