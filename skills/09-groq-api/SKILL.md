@@ -198,6 +198,8 @@ A 線的產物剛好是 B 線的原料。合起來就是：**一段錄音 → �
 
 ## 選哪個 Whisper 模型：研習主線用 `whisper-large-v3`
 
+> 註：作者的 `audio-to-srt` 與 youtube-workflow 技能預設用 `whisper-large-v3-turbo`（求速度，word-level 時間碼一樣有）。兩者都能用，本包的推薦理由見下。
+
 Groq 上目前有兩個（查證 2026-07-27）：
 
 | 模型 | 官方標示的準確度 | 速度 | 語言 |
